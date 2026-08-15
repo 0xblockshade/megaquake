@@ -77,6 +77,8 @@ export interface CuratedTweet {
 	category: TweetCategory
 	label: string
 	disclaimer?: string
+	eventId?: string
+	region?: string
 }
 
 export interface TweetsResponse {

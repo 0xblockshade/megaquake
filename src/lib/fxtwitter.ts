@@ -110,6 +110,8 @@ export function normalizeFxTwitterStatus(
 		category: config.category,
 		label: config.label,
 		disclaimer: config.disclaimer,
+		eventId: config.eventId,
+		region: config.region,
 	}
 }
 

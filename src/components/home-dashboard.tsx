@@ -30,21 +30,23 @@ export function HomeDashboard() {
 	}
 
 	return (
-		<div className="flex h-full min-h-0 flex-col">
-			<div className="flex min-h-0 flex-1">
-				<div className="relative min-h-0 min-w-0 flex-1">
+		<div className="flex h-full min-h-0 flex-col overflow-hidden">
+			<div className="flex min-h-0 flex-1 overflow-hidden">
+				<div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
 					<QuakeDashboard onSelectionChange={handleSelectionChange} />
 				</div>
 				<TweetFeedSidebar
 					eventId={selectedId}
 					region={region}
 					selectedLabel={selectedLabel}
+					includeGlobal
 				/>
 			</div>
 			<TweetFeedDrawer
 				eventId={selectedId}
 				region={region}
 				selectedLabel={selectedLabel}
+				includeGlobal
 			/>
 		</div>
 	)

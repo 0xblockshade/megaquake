@@ -78,6 +78,12 @@ body {
 	background: #0a0a0a;
 }
 
+.feed-scroll {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+}
+
 @keyframes quake-pulse {
 	0%,
 	100% {

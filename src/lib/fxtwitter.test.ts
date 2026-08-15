@@ -53,11 +53,17 @@ describe('fxtwitter', () => {
 		expect(tweet.authorHandle).toBe('jack')
 		expect(tweet.text).toBe('just setting up my twttr')
 		expect(tweet.category).toBe('official')
+		expect(tweet.eventId).toBeUndefined()
 	})
 
 	it('filters tracked posts by event id', () => {
 		const posts = filterTrackedPosts({ eventId: 'us6000tkt2' })
 		expect(posts.every((post) => post.eventId === 'us6000tkt2')).toBe(true)
 		expect(posts.length).toBeGreaterThan(0)
+	})
+
+	it('returns the full curated list for the global feed', () => {
+		const posts = filterTrackedPosts({})
+		expect(posts.length).toBeGreaterThan(1)
 	})
 })

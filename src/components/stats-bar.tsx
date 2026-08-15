@@ -43,7 +43,7 @@ export function StatsBar({ stats, isLoading }: StatsBarProps) {
 			: ''
 
 	return (
-		<div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#262626] bg-[#0a0a0a] px-4 py-2">
+		<div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#262626] bg-[#0a0a0a] px-4 py-2">
 			<StatItem
 				label="Today"
 				value={isLoading ? '…' : String(stats?.today ?? 0)}

@@ -44,9 +44,9 @@ export function QuakeDetailView({ event }: QuakeDetailViewProps) {
 				</div>
 			</header>
 
-			<div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px]">
-				<div className="grid min-h-0 grid-rows-[minmax(240px,1fr)_auto]">
-					<div className="relative min-h-[240px]">
+			<div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_360px]">
+				<div className="grid min-h-0 grid-rows-[minmax(240px,1fr)_minmax(0,auto)] overflow-hidden">
+					<div className="relative min-h-[240px] overflow-hidden">
 						<EarthquakeMap
 							events={[event]}
 							selectedId={event.id}
@@ -55,18 +55,20 @@ export function QuakeDetailView({ event }: QuakeDetailViewProps) {
 							focusEvent={event}
 						/>
 					</div>
-					<div className="border-t border-[#262626] p-4">
+					<div className="max-h-[40vh] overflow-y-auto overscroll-contain border-t border-[#262626] p-4">
 						<QuakeDetailPanel
 							event={event}
 							isFeatured={Boolean(featured)}
 						/>
 					</div>
 				</div>
-				<TweetFeedSidebar
-					eventId={event.id}
-					region={region}
-					selectedLabel={featured?.label ?? event.place}
-				/>
+				<div className="hidden min-h-0 overflow-hidden xl:block xl:h-full">
+					<TweetFeedSidebar
+						eventId={event.id}
+						region={region}
+						selectedLabel={featured?.label ?? event.place}
+					/>
+				</div>
 			</div>
 		</div>
 	)
