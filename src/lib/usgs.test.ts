@@ -48,6 +48,7 @@ describe('usgs', () => {
 	})
 
 	it('parses magnitude and time range enums', () => {
+		expect(parseMagnitudeFilter('3.0')).toBe('3.0')
 		expect(parseMagnitudeFilter('4.5')).toBe('4.5')
 		expect(parseMagnitudeFilter('bad')).toBeNull()
 		expect(parseTimeRange('30d')).toBe('30d')
@@ -57,8 +58,8 @@ describe('usgs', () => {
 	it('selects feed URLs by time range', () => {
 		expect(selectFeedUrl('24h')).toContain('earthquakes/feed')
 		expect(selectFeedUrl('24h')).toContain('2.5_day.geojson')
-		expect(selectFeedUrl('7d')).toContain('4.5_week.geojson')
-		expect(selectFeedUrl('30d')).toContain('4.5_month.geojson')
+		expect(selectFeedUrl('7d')).toContain('2.5_week.geojson')
+		expect(selectFeedUrl('30d')).toContain('2.5_month.geojson')
 	})
 
 	it('normalizes USGS features', () => {
@@ -108,5 +109,28 @@ describe('usgs', () => {
 
 		expect(collection).toHaveLength(1)
 		expect(collection[0]?.id).toBe('us6000tkt2')
+	})
+
+	it('keeps events at M3.0 and above', () => {
+		const collection = normalizeUsgsCollection(
+			{
+				type: 'FeatureCollection',
+				features: [
+					{
+						...sampleFeature,
+						id: 'below',
+						properties: { ...sampleFeature.properties, mag: 2.9 },
+					},
+					{
+						...sampleFeature,
+						id: 'edge',
+						properties: { ...sampleFeature.properties, mag: 3.0 },
+					},
+				],
+			},
+			'3.0',
+		)
+
+		expect(collection.map((event) => event.id)).toEqual(['edge'])
 	})
 })

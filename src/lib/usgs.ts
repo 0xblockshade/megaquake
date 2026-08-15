@@ -36,12 +36,19 @@ interface UsgsGeoJson {
 
 const FEED_URLS: Record<TimeRange, string> = {
 	'24h': `${USGS_BASE}/earthquakes/feed/v1.0/summary/2.5_day.geojson`,
-	'7d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/4.5_week.geojson`,
-	'30d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/4.5_month.geojson`,
+	'7d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/2.5_week.geojson`,
+	'30d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/2.5_month.geojson`,
 }
 
 export function parseMagnitudeFilter(value: string | null): MagnitudeFilter | null {
-	if (value === 'all' || value === '4.5' || value === '7.0') return value
+	if (
+		value === 'all' ||
+		value === '3.0' ||
+		value === '4.5' ||
+		value === '7.0'
+	) {
+		return value
+	}
 	return null
 }
 
@@ -99,10 +106,11 @@ export function normalizeUsgsCollection(
 }
 
 async function fetchUsgsJson(url: string): Promise<UsgsGeoJson> {
-	const isMonthFeed = url.includes('_month.geojson')
+	const isLargeFeed =
+		url.includes('_month.geojson') || url.includes('2.5_week.geojson')
 	const response = await fetch(
 		url,
-		isMonthFeed
+		isLargeFeed
 			? { cache: 'no-store' }
 			: { next: { revalidate: CACHE_SECONDS } },
 	)
@@ -114,7 +122,7 @@ async function fetchUsgsJson(url: string): Promise<UsgsGeoJson> {
 	return response.json() as Promise<UsgsGeoJson>
 }
 
-export async function fetchQuakes(
+export async function fetchUsgsQuakes(
 	params: QuakeQueryParams,
 ): Promise<QuakeEvent[]> {
 	const url = selectFeedUrl(params.timeRange)

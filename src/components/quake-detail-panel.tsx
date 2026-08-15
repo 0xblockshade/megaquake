@@ -7,6 +7,7 @@ import {
 	formatUtcTime,
 } from '@/lib/format'
 import { formatMagnitude, getMagnitudeColor } from '@/lib/magnitude'
+import { getSourceLabel, getSourcePageLabel } from '@/lib/source'
 import type { QuakeEvent } from '@/lib/types'
 
 interface QuakeDetailPanelProps {
@@ -83,6 +84,14 @@ export function QuakeDetailPanel({
 						{event.tsunami ? 'Possible' : 'None reported'}
 					</dd>
 				</div>
+				<div>
+					<dt className="text-[10px] uppercase tracking-wider text-[#888888]">
+						Source
+					</dt>
+					<dd className="text-[#ededed]">
+						{getSourceLabel(event.source)}
+					</dd>
+				</div>
 				<div className="col-span-2">
 					<dt className="text-[10px] uppercase tracking-wider text-[#888888]">
 						Time (local)
@@ -114,7 +123,7 @@ export function QuakeDetailPanel({
 					rel="noopener noreferrer"
 					className="rounded-md border border-[#262626] px-3 py-1.5 text-xs text-[#ededed] transition-colors hover:border-[#404040] hover:bg-[#0a0a0a]"
 				>
-					USGS event page
+					{getSourcePageLabel(event.source)}
 				</a>
 			</div>
 		</article>

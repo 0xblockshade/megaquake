@@ -10,6 +10,7 @@ interface MagnitudeFilterProps {
 const OPTIONS: { value: MagnitudeFilter; label: string }[] = [
 	{ value: '7.0', label: 'M7.0+' },
 	{ value: '4.5', label: 'M4.5+' },
+	{ value: '3.0', label: 'M3.0+' },
 	{ value: 'all', label: 'All' },
 ]
 

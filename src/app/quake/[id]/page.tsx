@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { QuakeDetailView } from '@/components/quake-detail-view'
-import { fetchQuakeById } from '@/lib/usgs'
+import { fetchQuakeById } from '@/lib/quakes'
 
 interface QuakeDetailPageProps {
 	params: Promise<{ id: string }>

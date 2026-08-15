@@ -45,7 +45,7 @@ interface QuakeDashboardProps {
 }
 
 export function QuakeDashboard({
-	initialMagnitude = '7.0',
+	initialMagnitude = '3.0',
 	initialTimeRange = '7d',
 	initialSelectedId = null,
 	showFeaturedList = true,

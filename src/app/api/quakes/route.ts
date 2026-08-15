@@ -1,8 +1,8 @@
 import featuredEvents from '@/config/featured-events.json'
+import { fetchQuakes } from '@/lib/quakes'
 import {
 	fetchFeaturedEvents,
 	fetchQuakeStats,
-	fetchQuakes,
 	parseQuakeQueryParams,
 } from '@/lib/usgs'
 import type { QuakesErrorResponse, QuakesResponse } from '@/lib/types'
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 		})
 	} catch {
 		const body: QuakesErrorResponse = {
-			error: 'Failed to fetch earthquake data from USGS',
+			error: 'Failed to fetch earthquake data',
 			code: 'UPSTREAM_ERROR',
 		}
 		return Response.json(body, { status: 502 })

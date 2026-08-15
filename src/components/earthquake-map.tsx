@@ -57,7 +57,7 @@ const DARK_STYLE: StyleSpecification = {
 			],
 			tileSize: 256,
 			attribution:
-				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> · <a href="https://earthquake.usgs.gov/">USGS</a> · <a href="https://www.emsc-csem.org/">EMSC</a> · <a href="https://www.igp.gob.pe/">IGP</a>',
 		},
 	},
 	layers: [
