@@ -129,10 +129,32 @@ export function normalizeUsgsCollection(
 		.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
 }
 
+/**
+ * In-process cache for feeds Next refuses to store.
+ *
+ * Next's data cache rejects anything over 2MB, and all_week is ~2.2MB while
+ * all_month is ~7.8MB — so `revalidate` silently does nothing for them and every
+ * request re-downloads from USGS. Holding the parsed result in module scope
+ * skips both the download and the JSON parse for the life of the instance.
+ *
+ * Deliberately unbounded in entry count: there are six feed URLs in total.
+ */
+const memoryCache = new Map<string, { expires: number; data: UsgsGeoJson }>()
+
+/** Above this, Next silently declines to cache and we fall back to memory. */
+const NEXT_CACHE_LIMIT_BYTES = 2_000_000
+
+export function __clearFeedCache() {
+	memoryCache.clear()
+}
+
 async function fetchUsgsJson(
 	url: string,
 	ttlSeconds: number = CACHE_SECONDS,
 ): Promise<UsgsGeoJson> {
+	const cached = memoryCache.get(url)
+	if (cached && cached.expires > Date.now()) return cached.data
+
 	// Previously the month feed used cache: 'no-store', which re-downloaded 7.8MB
 	// on every request for data that is almost entirely historical.
 	const response = await fetch(url, { next: { revalidate: ttlSeconds } })
@@ -141,7 +163,19 @@ async function fetchUsgsJson(
 		throw new Error(`USGS request failed: ${response.status}`)
 	}
 
-	return response.json() as Promise<UsgsGeoJson>
+	const text = await response.text()
+	const data = JSON.parse(text) as UsgsGeoJson
+
+	// Only the feeds Next cannot cache are worth holding in memory; the small
+	// ones are already served from the data cache without the duplication.
+	if (text.length > NEXT_CACHE_LIMIT_BYTES) {
+		memoryCache.set(url, {
+			expires: Date.now() + ttlSeconds * 1000,
+			data,
+		})
+	}
+
+	return data
 }
 
 export async function fetchQuakes(
