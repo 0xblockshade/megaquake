@@ -37,16 +37,21 @@ interface UsgsGeoJson {
 /**
  * Feed matrix, keyed by the filter the user actually chose.
  *
- * Previously every time range used one fixed feed, so "All magnitudes" silently
- * meant M2.5+ at 24h and M4.5+ at 7d/30d — roughly 200 real quakes a day were
- * missing from a view that claimed to show everything. Picking the feed by
- * magnitude as well fixes that: all_day carries 270 events where 2.5_day carries 75.
+ * Every time range used to read one fixed feed regardless of magnitude, so the
+ * high-magnitude filters paid to download and parse the full low-magnitude feed.
+ * Choosing by magnitude too means M4.5+ and M7.0+ read the 4.5 feeds, which are
+ * a fraction of the size.
  *
- * M7.0+ reads from the 4.5 feeds and filters down, since USGS publishes no 7.0
- * feed and every M7 event is by definition in the M4.5 one.
+ * The M2.5 baseline for "all" is deliberate and matches minMagnitudeForFilter:
+ * the all_* feeds go down to M-1.2 and reach ~11,000 events over 30 days, which
+ * is noise rather than signal on a world map.
+ *
+ * M7.0+ reads the 4.5 feeds and filters down, since USGS publishes no 7.0 feed
+ * and every M7 event is by definition in the M4.5 one.
  */
 const FEED_NAMES: Record<MagnitudeFilter, Record<TimeRange, string>> = {
-	all: { '24h': 'all_day', '7d': 'all_week', '30d': 'all_month' },
+	all: { '24h': '2.5_day', '7d': '2.5_week', '30d': '2.5_month' },
+	'3.0': { '24h': '2.5_day', '7d': '2.5_week', '30d': '2.5_month' },
 	'4.5': { '24h': '4.5_day', '7d': '4.5_week', '30d': '4.5_month' },
 	'7.0': { '24h': '4.5_day', '7d': '4.5_week', '30d': '4.5_month' },
 }
@@ -54,7 +59,7 @@ const FEED_NAMES: Record<MagnitudeFilter, Record<TimeRange, string>> = {
 /**
  * Revalidation windows, in seconds. USGS republishes the summary feeds about
  * once a minute, so the day feeds are polled tightly for freshness. The month
- * feeds are up to 7.8MB and mostly historical, so they are cached hard — a quake
+ * feeds are megabytes and mostly historical, so they are cached hard — a quake
  * from three weeks ago is not going to change.
  */
 const FEED_TTL: Record<TimeRange, number> = {
@@ -64,7 +69,14 @@ const FEED_TTL: Record<TimeRange, number> = {
 }
 
 export function parseMagnitudeFilter(value: string | null): MagnitudeFilter | null {
-	if (value === 'all' || value === '4.5' || value === '7.0') return value
+	if (
+		value === 'all' ||
+		value === '3.0' ||
+		value === '4.5' ||
+		value === '7.0'
+	) {
+		return value
+	}
 	return null
 }
 
@@ -157,6 +169,8 @@ async function fetchUsgsJson(
 
 	// Previously the month feed used cache: 'no-store', which re-downloaded 7.8MB
 	// on every request for data that is almost entirely historical.
+	// Replaces cache: 'no-store' for the large feeds, which re-downloaded several
+	// megabytes on every request for data that is almost entirely historical.
 	const response = await fetch(url, { next: { revalidate: ttlSeconds } })
 
 	if (!response.ok) {
@@ -178,7 +192,7 @@ async function fetchUsgsJson(
 	return data
 }
 
-export async function fetchQuakes(
+export async function fetchUsgsQuakes(
 	params: QuakeQueryParams,
 ): Promise<QuakeEvent[]> {
 	const url = selectFeedUrl(params.timeRange, params.magnitude)

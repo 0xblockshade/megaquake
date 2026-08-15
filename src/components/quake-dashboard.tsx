@@ -45,11 +45,10 @@ interface QuakeDashboardProps {
 }
 
 export function QuakeDashboard({
-	// M7.0+ over 7 days is typically 1-3 events worldwide, so it opened on a map
-	// that looked broken rather than quiet. M4.5+ over 24h is the band that reads
-	// as a live global map — populated, but not the ~2,300 dots that "all" gives.
-	initialMagnitude = '4.5',
-	initialTimeRange = '24h',
+	// Not M7.0+: that is 1-3 events worldwide over a week, so the map opened
+	// looking broken rather than quiet.
+	initialMagnitude = '3.0',
+	initialTimeRange = '7d',
 	initialSelectedId = null,
 	showFeaturedList = true,
 	onSelectionChange,

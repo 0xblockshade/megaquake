@@ -1,6 +1,6 @@
-export type QuakeSource = 'usgs' | 'emsc'
+export type QuakeSource = 'usgs' | 'emsc' | 'igp'
 
-export type MagnitudeFilter = 'all' | '4.5' | '7.0'
+export type MagnitudeFilter = 'all' | '3.0' | '4.5' | '7.0'
 
 export type TimeRange = '24h' | '7d' | '30d'
 

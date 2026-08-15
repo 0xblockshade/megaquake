@@ -66,22 +66,31 @@ export function getRecencyOpacity(ageHours: number): number {
 	return 1 - 0.55 * ((ageHours - 1) / 47)
 }
 
-export function passesMagnitudeFilter(
-	mag: number,
-	filter: 'all' | '4.5' | '7.0',
-): boolean {
+export function minMagnitudeForFilter(
+	filter: 'all' | '3.0' | '4.5' | '7.0',
+): number {
 	switch (filter) {
 		case 'all':
-			return true
+			return 2.5
+		case '3.0':
+			return 3
 		case '4.5':
-			return mag >= 4.5
+			return 4.5
 		case '7.0':
-			return mag >= 7
+			return 7
 		default: {
 			const exhaustive: never = filter
 			return exhaustive
 		}
 	}
+}
+
+export function passesMagnitudeFilter(
+	mag: number,
+	filter: 'all' | '3.0' | '4.5' | '7.0',
+): boolean {
+	if (filter === 'all') return true
+	return mag >= minMagnitudeForFilter(filter)
 }
 
 export function formatMagnitude(mag: number): string {

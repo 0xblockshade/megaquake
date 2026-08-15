@@ -49,6 +49,7 @@ describe('usgs', () => {
 	})
 
 	it('parses magnitude and time range enums', () => {
+		expect(parseMagnitudeFilter('3.0')).toBe('3.0')
 		expect(parseMagnitudeFilter('4.5')).toBe('4.5')
 		expect(parseMagnitudeFilter('bad')).toBeNull()
 		expect(parseTimeRange('30d')).toBe('30d')
@@ -58,12 +59,17 @@ describe('usgs', () => {
 	it('selects feed URLs by time range and magnitude', () => {
 		expect(selectFeedUrl('24h', 'all')).toContain('earthquakes/feed')
 
-		// "All magnitudes" must read the all_* feeds. Reading 2.5_day here was
-		// dropping ~200 real quakes a day from a view claiming to show everything.
-		expect(selectFeedUrl('24h', 'all')).toContain('all_day.geojson')
-		expect(selectFeedUrl('7d', 'all')).toContain('all_week.geojson')
-		expect(selectFeedUrl('30d', 'all')).toContain('all_month.geojson')
+		// "all" is the M2.5 baseline, matching minMagnitudeForFilter. The all_*
+		// feeds reach M-1.2 and ~11,000 events over 30 days, which is noise.
+		expect(selectFeedUrl('24h', 'all')).toContain('2.5_day.geojson')
+		expect(selectFeedUrl('7d', 'all')).toContain('2.5_week.geojson')
+		expect(selectFeedUrl('30d', 'all')).toContain('2.5_month.geojson')
 
+		// M3.0+ needs the same feed, then filters down.
+		expect(selectFeedUrl('7d', '3.0')).toContain('2.5_week.geojson')
+
+		// The higher filters read the far smaller 4.5 feeds instead of paying to
+		// download and parse the full 2.5 feed only to discard most of it.
 		expect(selectFeedUrl('24h', '4.5')).toContain('4.5_day.geojson')
 		expect(selectFeedUrl('7d', '4.5')).toContain('4.5_week.geojson')
 		expect(selectFeedUrl('30d', '4.5')).toContain('4.5_month.geojson')
@@ -126,5 +132,28 @@ describe('usgs', () => {
 
 		expect(collection).toHaveLength(1)
 		expect(collection[0]?.id).toBe('us6000tkt2')
+	})
+
+	it('keeps events at M3.0 and above', () => {
+		const collection = normalizeUsgsCollection(
+			{
+				type: 'FeatureCollection',
+				features: [
+					{
+						...sampleFeature,
+						id: 'below',
+						properties: { ...sampleFeature.properties, mag: 2.9 },
+					},
+					{
+						...sampleFeature,
+						id: 'edge',
+						properties: { ...sampleFeature.properties, mag: 3.0 },
+					},
+				],
+			},
+			'3.0',
+		)
+
+		expect(collection.map((event) => event.id)).toEqual(['edge'])
 	})
 })

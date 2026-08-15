@@ -21,7 +21,7 @@ export default function QuakeDetailError({
 			</h1>
 			<p className="max-w-md text-sm text-[#888888]">
 				The event page could not be loaded. The earthquake may no
-				longer be available from USGS.
+				longer be available from the catalog.
 			</p>
 			<div className="flex gap-2">
 				<button
