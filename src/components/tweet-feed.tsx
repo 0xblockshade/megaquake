@@ -11,6 +11,10 @@ const fetcher = (url: string) =>
 		return response.json() as Promise<TweetsResponse>
 	})
 
+/** Matches the server's Cache-Control window, so a refresh can actually return
+ * something new rather than re-reading the same cached payload. */
+const REFRESH_MS = 60_000
+
 function tweetMatchesSelection(
 	tweet: CuratedTweet,
 	eventId?: string | null,
@@ -25,43 +29,58 @@ interface TweetFeedProps {
 	eventId?: string | null
 	region?: string | null
 	selectedLabel?: string | null
+	/** USGS place string for the selected quake — scopes the live Bluesky search. */
+	place?: string | null
 	mobileOnly?: boolean
 	includeGlobal?: boolean
+}
+
+function buildQuery({
+	eventId,
+	region,
+	place,
+	includeGlobal,
+}: Omit<TweetFeedProps, 'mobileOnly' | 'selectedLabel'>): string {
+	const params = new URLSearchParams()
+
+	// Curated posts are filtered by event/region; the live search is scoped by
+	// place. When showing the global feed we still send place, so selecting a
+	// quake narrows the live half without hiding the curated half.
+	if (!includeGlobal && eventId) params.set('eventId', eventId)
+	if (!includeGlobal && !eventId && region) params.set('region', region)
+	if (place) params.set('place', place)
+
+	const qs = params.toString()
+	return qs ? `/api/tweets?${qs}` : '/api/tweets'
 }
 
 function FeedContent({
 	eventId,
 	region,
 	selectedLabel,
+	place,
 	includeGlobal = false,
 }: Omit<TweetFeedProps, 'mobileOnly'>) {
-	const query = includeGlobal
-		? '/api/tweets'
-		: eventId
-			? `/api/tweets?eventId=${encodeURIComponent(eventId)}`
-			: region
-				? `/api/tweets?region=${encodeURIComponent(region)}`
-				: '/api/tweets'
+	const query = buildQuery({ eventId, region, place, includeGlobal })
 
-	const { data, error, isLoading, isValidating } = useSWR(
-		query,
-		fetcher,
-		{ refreshInterval: 120_000 },
-	)
+	const { data, error, isLoading, isValidating } = useSWR(query, fetcher, {
+		refreshInterval: REFRESH_MS,
+		keepPreviousData: true,
+	})
+
+	const curatedTweets = data?.tweets.filter((tweet) => !tweet.live) ?? []
+	const liveTweets = data?.tweets.filter((tweet) => tweet.live) ?? []
 
 	const relatedTweets =
 		includeGlobal && (eventId || region)
-			? (data?.tweets.filter((tweet) =>
+			? curatedTweets.filter((tweet) =>
 					tweetMatchesSelection(tweet, eventId, region),
-				) ?? [])
+				)
 			: []
 
-	const remainingTweets = includeGlobal
-		? (data?.tweets.filter(
-				(tweet) =>
-					!relatedTweets.some((related) => related.id === tweet.id),
-			) ?? [])
-		: (data?.tweets ?? [])
+	const remainingCurated = curatedTweets.filter(
+		(tweet) => !relatedTweets.some((related) => related.id === tweet.id),
+	)
 
 	const hasRelated = relatedTweets.length > 0
 	const isScoped = Boolean(eventId || region) && !includeGlobal
@@ -69,18 +88,27 @@ function FeedContent({
 	return (
 		<div className="flex h-full min-h-0 flex-col overflow-hidden">
 			<header className="shrink-0 border-b border-[#262626] px-4 py-3">
-				<h2 className="text-sm font-medium text-[#ededed]">
-					{isScoped ? 'Curated posts' : 'Global feed'}
-				</h2>
+				<div className="flex items-center justify-between gap-2">
+					<h2 className="text-sm font-medium text-[#ededed]">
+						{isScoped ? 'Curated posts' : 'Global feed'}
+					</h2>
+					{liveTweets.length > 0 ? (
+						<span className="flex items-center gap-1.5 font-mono text-[10px] text-[#888888]">
+							<span
+								className="h-1.5 w-1.5 rounded-full bg-[#22c55e]"
+								aria-hidden="true"
+							/>
+							LIVE
+						</span>
+					) : null}
+				</div>
 				<p className="mt-1 text-xs text-[#888888]">
-					{selectedLabel && hasRelated
-						? `Showing tracked posts for ${selectedLabel}, then the rest of the curated feed.`
-						: selectedLabel
-							? `No posts are tracked for ${selectedLabel} yet. Showing the global curated feed.`
-							: 'Official USGS posts tracked across current hotspots.'}
+					{selectedLabel
+						? `Curated posts for ${selectedLabel}, then live posts about it.`
+						: 'Official X posts, then live posts from across Bluesky.'}
 				</p>
 				<p className="mt-1 text-[11px] text-[#888888]">
-					This is a curated feed, not a live search. Earthquakes
+					Live posts are unverified public search results. Earthquakes
 					cannot be reliably predicted.
 				</p>
 			</header>
@@ -92,19 +120,13 @@ function FeedContent({
 
 				{error ? (
 					<p className="text-sm text-[#ef4444]">
-						Unable to load curated posts right now.
+						Unable to load posts right now.
 					</p>
 				) : null}
 
 				{data && data.tweets.length === 0 ? (
 					<p className="text-sm text-[#888888]">
-						No curated posts are configured yet.
-					</p>
-				) : null}
-
-				{data?.errors && data.errors.length > 0 ? (
-					<p className="mb-3 text-xs text-[#888888]">
-						Some tracked posts could not be resolved.
+						No posts found yet. The live feed refreshes every minute.
 					</p>
 				) : null}
 
@@ -119,14 +141,24 @@ function FeedContent({
 					</section>
 				) : null}
 
-				{remainingTweets.length > 0 ? (
+				{remainingCurated.length > 0 ? (
+					<section className="mb-4 space-y-3">
+						<h3 className="text-[10px] uppercase tracking-wider text-[#888888]">
+							{hasRelated ? 'Other tracked posts' : 'Tracked posts'}
+						</h3>
+						{remainingCurated.map((tweet) => (
+							<TweetCard key={tweet.id} tweet={tweet} />
+						))}
+					</section>
+				) : null}
+
+				{liveTweets.length > 0 ? (
 					<section className="space-y-3">
-						{includeGlobal && hasRelated ? (
-							<h3 className="text-[10px] uppercase tracking-wider text-[#888888]">
-								All tracked posts
-							</h3>
-						) : null}
-						{remainingTweets.map((tweet) => (
+						<h3 className="text-[10px] uppercase tracking-wider text-[#888888]">
+							Live · {liveTweets.length} post
+							{liveTweets.length === 1 ? '' : 's'}
+						</h3>
+						{liveTweets.map((tweet) => (
 							<TweetCard key={tweet.id} tweet={tweet} />
 						))}
 					</section>
@@ -159,7 +191,7 @@ export function TweetFeedDrawer(props: TweetFeedProps) {
 						type="button"
 						className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-md border border-[#262626] bg-[#111111] px-4 py-2 text-sm text-[#ededed] shadow-none transition-colors hover:border-[#404040]"
 					>
-						Curated feed
+						Live feed
 					</button>
 				</Drawer.Trigger>
 				<Drawer.Portal>

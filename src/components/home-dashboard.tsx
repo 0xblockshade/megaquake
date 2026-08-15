@@ -39,6 +39,7 @@ export function HomeDashboard() {
 					eventId={selectedId}
 					region={region}
 					selectedLabel={selectedLabel}
+					place={selectedEvent?.place ?? null}
 					includeGlobal
 				/>
 			</div>
@@ -46,6 +47,7 @@ export function HomeDashboard() {
 				eventId={selectedId}
 				region={region}
 				selectedLabel={selectedLabel}
+				place={selectedEvent?.place ?? null}
 				includeGlobal
 			/>
 		</div>

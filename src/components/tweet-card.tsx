@@ -35,7 +35,7 @@ export function TweetCard({ tweet }: TweetCardProps) {
 				<div className="min-w-0 flex-1">
 					<div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
 						<a
-							href={`https://x.com/${tweet.authorHandle}`}
+							href={tweet.profileUrl}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="truncate text-sm font-medium text-[#ededed] hover:underline"
@@ -43,7 +43,7 @@ export function TweetCard({ tweet }: TweetCardProps) {
 							{tweet.authorName}
 						</a>
 						<a
-							href={`https://x.com/${tweet.authorHandle}`}
+							href={tweet.profileUrl}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="font-mono text-xs text-[#888888] hover:underline"
@@ -51,9 +51,20 @@ export function TweetCard({ tweet }: TweetCardProps) {
 							@{tweet.authorHandle}
 						</a>
 					</div>
-					<p className="text-[10px] uppercase tracking-wider text-[#888888]">
-						{tweet.label}
-					</p>
+					<div className="flex flex-wrap items-center gap-x-2">
+						<span
+							className={
+								tweet.source === 'x'
+									? 'rounded-sm border border-[#404040] px-1 text-[9px] font-medium uppercase tracking-wider text-[#ededed]'
+									: 'rounded-sm border border-[#1d4ed8] px-1 text-[9px] font-medium uppercase tracking-wider text-[#60a5fa]'
+							}
+						>
+							{tweet.source === 'x' ? 'X' : 'Bluesky'}
+						</span>
+						<p className="text-[10px] uppercase tracking-wider text-[#888888]">
+							{tweet.label}
+						</p>
+					</div>
 				</div>
 				<a
 					href={tweet.url}

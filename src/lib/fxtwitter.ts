@@ -112,6 +112,9 @@ export function normalizeFxTwitterStatus(
 		disclaimer: config.disclaimer,
 		eventId: config.eventId,
 		region: config.region,
+		source: 'x',
+		profileUrl: `https://x.com/${author?.screen_name ?? ''}`,
+		live: false,
 	}
 }
 
