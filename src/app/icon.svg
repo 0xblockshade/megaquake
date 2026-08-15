@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Seismic rings around a solid core: the same shape the map draws for an
+       event, in the same magnitude palette. Reads as a dot with a halo at 16px,
+       where finer detail would turn to mush. -->
+  <rect width="32" height="32" rx="7" fill="#0a0a0a"/>
+  <circle cx="16" cy="16" r="13" fill="none" stroke="#dc2626" stroke-width="1.5" opacity="0.35"/>
+  <circle cx="16" cy="16" r="9.5" fill="none" stroke="#ef4444" stroke-width="1.75" opacity="0.6"/>
+  <circle cx="16" cy="16" r="6" fill="none" stroke="#f97316" stroke-width="2" opacity="0.9"/>
+  <circle cx="16" cy="16" r="3.25" fill="#fecaca"/>
+</svg>
