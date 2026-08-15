@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MegaQuake — Live Global Earthquake Tracker
 
-## Getting Started
+A Next.js app that displays a live, interactive world map of earthquakes with a curated sidebar of related X/Twitter posts from official sources.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Interactive MapLibre map with magnitude-scaled markers
+- Magnitude filters: M7.0+, M4.5+, All
+- Time filters: 24h, 7 days, 30 days
+- Auto-refresh every 60 seconds with pulse animation for new events
+- Global stats bar: today, this week, strongest active, M7+ this year
+- Curated social feed resolved via FxTwitter (no X API key required)
+- Event detail pages at `/quake/[id]`
+- Mobile-responsive layout with swipe-up curated feed drawer
+
+## Data sources
+
+- **Earthquakes**: [USGS Earthquake GeoJSON feeds](https://earthquake.usgs.gov/earthquakes/feed/) and FDSN event API
+- **Social posts**: [FxTwitter API v2](https://docs.fxembed.com/api/introduction/) for resolving tracked post URLs
+- **Basemap**: CARTO Dark Matter raster tiles (keyless). MapLibre worker files are copied to `public/maplibre` on `npm install`.
+
+No paid API keys or environment variables are required for the MVP.
+
+## Architecture
+
+```
+src/
+  app/
+    page.tsx                 # Main dashboard
+    quake/[id]/page.tsx      # Event detail
+    api/quakes/route.ts      # USGS proxy + normalization
+    api/tweets/route.ts      # FxTwitter resolver
+  components/                # Map, filters, feed, stats
+  config/
+    featured-events.json     # Verified USGS event IDs
+    tracked-posts.json       # Curated X post URLs
+  lib/                       # USGS, FxTwitter, types, utilities
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Server route handlers cache upstream responses (~60s for quakes, ~5m for tweets). The client polls via SWR.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Curated posts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Posts are configured in `src/config/tracked-posts.json`. FxTwitter resolves individual post URLs only — it does not support keyword search. Add official agency posts (USGS, EMSC, BMKG, etc.) by URL.
 
-## Learn More
+**Important**: This is a curated feed, not a live firehose. Earthquakes cannot be reliably predicted; any commentary posts must be labeled as unverified social commentary, not validated forecasts.
 
-To learn more about Next.js, take a look at the following resources:
+## Local development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+### Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `npm run dev` — development server
+- `npm run build` — production build
+- `npm run start` — production server
+- `npm run lint` — ESLint
+- `npm run typecheck` — TypeScript check
+- `npm run test` — unit tests
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy to Vercel
+
+1. Push to GitHub
+2. Import the repo in [Vercel](https://vercel.com/new)
+3. Deploy with default Next.js settings — no env vars needed
+
+## Attribution
+
+- Earthquake data: USGS
+- Map tiles: OpenFreeMap / OpenStreetMap (attribution shown on map)
+- Social content: respective X/Twitter authors via FxTwitter
+
+## License
+
+MIT

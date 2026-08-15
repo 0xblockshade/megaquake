@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--background: #000000;
+	--foreground: #ededed;
+	--surface: #111111;
+	--panel: #0a0a0a;
+	--border: #262626;
+	--muted: #888888;
+	--accent-m4: #eab308;
+	--accent-m5: #f97316;
+	--accent-m6: #ef4444;
+	--accent-m7: #dc2626;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-surface: var(--surface);
+	--color-panel: var(--panel);
+	--color-border: var(--border);
+	--color-muted: var(--muted);
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
+	overflow: hidden;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+	background: var(--background);
+	color: var(--foreground);
+	font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+:focus-visible {
+	outline: 2px solid #ededed;
+	outline-offset: 2px;
+}
+
+.earthquake-map,
+.earthquake-map .maplibregl-map,
+.earthquake-map .maplibregl-canvas-container,
+.earthquake-map .maplibregl-canvas {
+	width: 100%;
+	height: 100%;
+}
+
+.earthquake-map .maplibregl-ctrl-attrib {
+	background: rgb(0 0 0 / 70%);
+	color: #888888;
+	font-size: 10px;
+}
+
+.earthquake-map .maplibregl-ctrl-attrib a {
+	color: #888888;
+}
+
+.earthquake-map .maplibregl-ctrl-group {
+	background: #111111;
+	border: 1px solid #262626;
+}
+
+.earthquake-map .maplibregl-ctrl-group button {
+	background: #111111;
+	border-color: #262626;
+	color: #ededed;
+}
+
+.earthquake-map .maplibregl-ctrl-group button:hover {
+	background: #0a0a0a;
+}
+
+@keyframes quake-pulse {
+	0%,
+	100% {
+		opacity: 0.25;
+		transform: scale(1);
+	}
+
+	50% {
+		opacity: 0.5;
+		transform: scale(1.15);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	body {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
 }

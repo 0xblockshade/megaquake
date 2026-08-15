@@ -1,0 +1,53 @@
+{
+	"posts": [
+		{
+			"eventId": "us6000tkt2",
+			"region": "indonesia",
+			"url": "https://x.com/USGS_Quakes/status/2088390971364917312",
+			"category": "official",
+			"label": "USGS preliminary report — Flores M7.7"
+		},
+		{
+			"eventId": "us6000tjl2",
+			"region": "colombia",
+			"url": "https://x.com/USGS_Quakes/status/2086889982426276065",
+			"category": "official",
+			"label": "USGS — Colombia M7.4 shaking report"
+		},
+		{
+			"eventId": "us6000tjl2",
+			"region": "colombia",
+			"url": "https://x.com/USGS_Quakes/status/2087213802206994721",
+			"category": "official",
+			"label": "USGS — Colombia ShakeMap revision"
+		},
+		{
+			"eventId": "us6000t7zp",
+			"region": "venezuela",
+			"url": "https://x.com/USGS_Quakes/status/2069919507636707364",
+			"category": "official",
+			"label": "USGS preliminary report — Venezuela M7.5"
+		},
+		{
+			"eventId": "us6000t7zc",
+			"region": "venezuela",
+			"url": "https://x.com/USGS_Quakes/status/2069907931135434970",
+			"category": "official",
+			"label": "USGS preliminary report — Venezuela M7.1 foreshock"
+		},
+		{
+			"eventId": "us6000t7zp",
+			"region": "venezuela",
+			"url": "https://x.com/USGS_Quakes/status/2070608239712972847",
+			"category": "official",
+			"label": "USGS — Venezuela aftershock guidance"
+		},
+		{
+			"eventId": "us6000tgb9",
+			"region": "japan",
+			"url": "https://x.com/USGS_Quakes/status/2082009931721412990",
+			"category": "official",
+			"label": "USGS preliminary report — Japan M6.8"
+		}
+	]
+}

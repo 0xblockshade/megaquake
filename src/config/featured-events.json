@@ -1,0 +1,27 @@
+[
+	{
+		"id": "us6000tkt2",
+		"label": "Indonesia — Flores M7.7",
+		"region": "indonesia"
+	},
+	{
+		"id": "us6000tjl2",
+		"label": "Colombia — Chocó M7.4",
+		"region": "colombia"
+	},
+	{
+		"id": "us6000t7zp",
+		"label": "Venezuela — Catia La Mar M7.5",
+		"region": "venezuela"
+	},
+	{
+		"id": "us6000t7zc",
+		"label": "Venezuela — San Felipe M7.2 foreshock",
+		"region": "venezuela"
+	},
+	{
+		"id": "us6000tgb9",
+		"label": "Japan — Kumamoto M6.8",
+		"region": "japan"
+	}
+]
