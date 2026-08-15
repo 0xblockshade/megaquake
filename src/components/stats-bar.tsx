@@ -1,5 +1,6 @@
 'use client'
 
+import { ContractAddress } from '@/components/contract-address'
 import { formatMagnitude } from '@/lib/magnitude'
 import type { QuakeStats } from '@/lib/types'
 
@@ -70,6 +71,10 @@ export function StatsBar({ stats, isLoading }: StatsBarProps) {
 				value={isLoading ? '…' : String(stats?.m7PlusThisYear ?? 0)}
 				mono
 			/>
+			{/* Pushed right so the contract sits apart from the seismic stats. */}
+			<div className="ml-auto">
+				<ContractAddress />
+			</div>
 		</div>
 	)
 }
