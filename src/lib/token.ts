@@ -3,7 +3,7 @@
  * Set TOKEN_MINT to "" and the contract element disappears everywhere — the
  * component renders nothing rather than an empty slot.
  */
-export const TOKEN_MINT = 'asNXLJWpuKkAAH8U97K4xzdhcQCX9sPDMBWtqPXquak'
+export const TOKEN_MINT = 'CM3uvpuaeMcth75bcCPqcMsvyuTPCqHfnJMWUaRdquak'
 
 export function explorerUrl(mint: string): string {
 	return `https://solscan.io/token/${mint}`
