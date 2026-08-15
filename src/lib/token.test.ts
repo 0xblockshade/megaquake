@@ -16,7 +16,14 @@ describe('token', () => {
 		expect(shortMint('abc')).toBe('abc')
 	})
 
-	it('keeps the configured mint a plausible base58 Solana address', () => {
+	/**
+	 * An empty mint is a valid, supported state: it means no token is attached
+	 * and the contract element renders nothing at all. Anything else must be a
+	 * plausible Solana address, so a typo cannot reach the site.
+	 */
+	it('is either empty or a plausible base58 Solana address', () => {
+		if (TOKEN_MINT === '') return
+
 		expect(TOKEN_MINT.length).toBeGreaterThanOrEqual(32)
 		expect(TOKEN_MINT.length).toBeLessThanOrEqual(44)
 		// Base58 excludes 0, O, I and l.
