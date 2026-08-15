@@ -24,6 +24,7 @@ import {
 	getMagnitudeRadius,
 	getRecencyOpacity,
 } from '@/lib/magnitude'
+import { spreadMapCoordinates } from '@/lib/spread-coordinates'
 import type { QuakeEvent } from '@/lib/types'
 
 const SOURCE_ID = 'quakes'
@@ -75,33 +76,41 @@ function buildGeoJson(
 	events: QuakeEvent[],
 	pulsingIds: string[],
 ): GeoJSON.FeatureCollection {
+	const spread = spreadMapCoordinates(events)
+
 	return {
 		type: 'FeatureCollection',
 		features: [...events]
 			.sort((a, b) => a.mag - b.mag)
-			.map((event) => ({
-			type: 'Feature',
-			geometry: {
-				type: 'Point',
-				coordinates: [event.lon, event.lat],
-			},
-			properties: {
-				id: event.id,
-				mag: event.mag,
-				place: event.place,
-				color: getMagnitudeColor(event.mag),
-				coreColor: getMagnitudeCoreColor(event.mag),
-				radius: getMagnitudeRadius(event.mag),
-				isPulsing: pulsingIds.includes(event.id) ? 1 : 0,
-				isMajor: event.mag >= 7 ? 1 : 0,
-				// Depth and age were already in the data and never drawn. Shallow
-				// quakes get a solid ring, deep ones a faint one; recent events stay
-				// at full opacity while older ones recede.
-				depthKm: event.depthKm,
-				depthOpacity: getDepthRingOpacity(event.depthKm),
-				recency: getRecencyOpacity(getAgeHours(event.time)),
-			},
-		})),
+			.map((event) => {
+				const point = spread.get(event.id) ?? event
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'Point',
+						coordinates: [point.lon, point.lat],
+					},
+					properties: {
+						id: event.id,
+						mag: event.mag,
+						place: event.place,
+						color: getMagnitudeColor(event.mag),
+						coreColor: getMagnitudeCoreColor(event.mag),
+						radius: getMagnitudeRadius(event.mag),
+						isPulsing: pulsingIds.includes(event.id)
+							? 1
+							: 0,
+						isMajor: event.mag >= 7 ? 1 : 0,
+						depthKm: event.depthKm,
+						depthOpacity: getDepthRingOpacity(
+							event.depthKm,
+						),
+						recency: getRecencyOpacity(
+							getAgeHours(event.time),
+						),
+					},
+				}
+			}),
 	}
 }
 
@@ -126,10 +135,11 @@ function addQuakeLayers(map: MapLibreMap) {
 				'interpolate',
 				['linear'],
 				['to-number', ['get', 'mag']],
-				2, 8,
-				4, 12,
-				5, 16,
-				6, 22,
+				2, 10,
+				3, 12,
+				4, 14,
+				5, 18,
+				6, 24,
 				7, 32,
 				8, 44,
 			],
@@ -138,7 +148,8 @@ function addQuakeLayers(map: MapLibreMap) {
 				'interpolate',
 				['linear'],
 				['to-number', ['get', 'mag']],
-				4, 0.12,
+				3, 0.16,
+				4, 0.14,
 				6, 0.18,
 				7, 0.28,
 			],
@@ -369,7 +380,8 @@ export function EarthquakeMap({
 						'interpolate',
 						['linear'],
 						['to-number', ['get', 'mag']],
-						4, 0.1,
+						3, 0.14,
+						4, 0.12,
 						6, 0.16,
 						7, pulseExpanded ? 0.38 : 0.22,
 					])
