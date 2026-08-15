@@ -34,10 +34,33 @@ interface UsgsGeoJson {
 	features: UsgsFeature[]
 }
 
-const FEED_URLS: Record<TimeRange, string> = {
-	'24h': `${USGS_BASE}/earthquakes/feed/v1.0/summary/2.5_day.geojson`,
-	'7d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/4.5_week.geojson`,
-	'30d': `${USGS_BASE}/earthquakes/feed/v1.0/summary/4.5_month.geojson`,
+/**
+ * Feed matrix, keyed by the filter the user actually chose.
+ *
+ * Previously every time range used one fixed feed, so "All magnitudes" silently
+ * meant M2.5+ at 24h and M4.5+ at 7d/30d — roughly 200 real quakes a day were
+ * missing from a view that claimed to show everything. Picking the feed by
+ * magnitude as well fixes that: all_day carries 270 events where 2.5_day carries 75.
+ *
+ * M7.0+ reads from the 4.5 feeds and filters down, since USGS publishes no 7.0
+ * feed and every M7 event is by definition in the M4.5 one.
+ */
+const FEED_NAMES: Record<MagnitudeFilter, Record<TimeRange, string>> = {
+	all: { '24h': 'all_day', '7d': 'all_week', '30d': 'all_month' },
+	'4.5': { '24h': '4.5_day', '7d': '4.5_week', '30d': '4.5_month' },
+	'7.0': { '24h': '4.5_day', '7d': '4.5_week', '30d': '4.5_month' },
+}
+
+/**
+ * Revalidation windows, in seconds. USGS republishes the summary feeds about
+ * once a minute, so the day feeds are polled tightly for freshness. The month
+ * feeds are up to 7.8MB and mostly historical, so they are cached hard — a quake
+ * from three weeks ago is not going to change.
+ */
+const FEED_TTL: Record<TimeRange, number> = {
+	'24h': 30,
+	'7d': 120,
+	'30d': 600,
 }
 
 export function parseMagnitudeFilter(value: string | null): MagnitudeFilter | null {
@@ -60,8 +83,16 @@ export function parseQuakeQueryParams(
 	return { magnitude, timeRange }
 }
 
-export function selectFeedUrl(timeRange: TimeRange): string {
-	return FEED_URLS[timeRange]
+export function selectFeedUrl(
+	timeRange: TimeRange,
+	magnitude: MagnitudeFilter = 'all',
+): string {
+	const name = FEED_NAMES[magnitude][timeRange]
+	return `${USGS_BASE}/earthquakes/feed/v1.0/summary/${name}.geojson`
+}
+
+export function selectFeedTtl(timeRange: TimeRange): number {
+	return FEED_TTL[timeRange]
 }
 
 export function normalizeUsgsFeature(feature: UsgsFeature): QuakeEvent | null {
@@ -98,14 +129,13 @@ export function normalizeUsgsCollection(
 		.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
 }
 
-async function fetchUsgsJson(url: string): Promise<UsgsGeoJson> {
-	const isMonthFeed = url.includes('_month.geojson')
-	const response = await fetch(
-		url,
-		isMonthFeed
-			? { cache: 'no-store' }
-			: { next: { revalidate: CACHE_SECONDS } },
-	)
+async function fetchUsgsJson(
+	url: string,
+	ttlSeconds: number = CACHE_SECONDS,
+): Promise<UsgsGeoJson> {
+	// Previously the month feed used cache: 'no-store', which re-downloaded 7.8MB
+	// on every request for data that is almost entirely historical.
+	const response = await fetch(url, { next: { revalidate: ttlSeconds } })
 
 	if (!response.ok) {
 		throw new Error(`USGS request failed: ${response.status}`)
@@ -117,8 +147,8 @@ async function fetchUsgsJson(url: string): Promise<UsgsGeoJson> {
 export async function fetchQuakes(
 	params: QuakeQueryParams,
 ): Promise<QuakeEvent[]> {
-	const url = selectFeedUrl(params.timeRange)
-	const data = await fetchUsgsJson(url)
+	const url = selectFeedUrl(params.timeRange, params.magnitude)
+	const data = await fetchUsgsJson(url, selectFeedTtl(params.timeRange))
 	return normalizeUsgsCollection(data, params.magnitude)
 }
 

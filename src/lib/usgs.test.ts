@@ -5,6 +5,7 @@ import {
 	parseMagnitudeFilter,
 	parseQuakeQueryParams,
 	parseTimeRange,
+	selectFeedTtl,
 	selectFeedUrl,
 } from '@/lib/usgs'
 
@@ -54,11 +55,28 @@ describe('usgs', () => {
 		expect(parseTimeRange('bad')).toBeNull()
 	})
 
-	it('selects feed URLs by time range', () => {
-		expect(selectFeedUrl('24h')).toContain('earthquakes/feed')
-		expect(selectFeedUrl('24h')).toContain('2.5_day.geojson')
-		expect(selectFeedUrl('7d')).toContain('4.5_week.geojson')
-		expect(selectFeedUrl('30d')).toContain('4.5_month.geojson')
+	it('selects feed URLs by time range and magnitude', () => {
+		expect(selectFeedUrl('24h', 'all')).toContain('earthquakes/feed')
+
+		// "All magnitudes" must read the all_* feeds. Reading 2.5_day here was
+		// dropping ~200 real quakes a day from a view claiming to show everything.
+		expect(selectFeedUrl('24h', 'all')).toContain('all_day.geojson')
+		expect(selectFeedUrl('7d', 'all')).toContain('all_week.geojson')
+		expect(selectFeedUrl('30d', 'all')).toContain('all_month.geojson')
+
+		expect(selectFeedUrl('24h', '4.5')).toContain('4.5_day.geojson')
+		expect(selectFeedUrl('7d', '4.5')).toContain('4.5_week.geojson')
+		expect(selectFeedUrl('30d', '4.5')).toContain('4.5_month.geojson')
+	})
+
+	it('reads M7.0+ from the 4.5 feeds, since USGS publishes no 7.0 feed', () => {
+		expect(selectFeedUrl('24h', '7.0')).toContain('4.5_day.geojson')
+		expect(selectFeedUrl('30d', '7.0')).toContain('4.5_month.geojson')
+	})
+
+	it('caches the heavy month feed far longer than the live day feed', () => {
+		expect(selectFeedTtl('24h')).toBeLessThan(selectFeedTtl('7d'))
+		expect(selectFeedTtl('7d')).toBeLessThan(selectFeedTtl('30d'))
 	})
 
 	it('normalizes USGS features', () => {

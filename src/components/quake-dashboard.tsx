@@ -64,7 +64,9 @@ export function QuakeDashboard({
 	const query = `/api/quakes?magnitude=${magnitude}&timeRange=${timeRange}`
 
 	const { data, error, isLoading, isValidating } = useSWR(query, fetcher, {
-		refreshInterval: 60_000,
+		// USGS republishes the summary feeds roughly once a minute and the 24h feed
+		// is now revalidated server-side every 30s, so poll at the same rate.
+		refreshInterval: 30_000,
 		keepPreviousData: true,
 	})
 

@@ -1,11 +1,57 @@
 import { describe, expect, it } from 'vitest'
 import {
+	formatDepth,
 	formatMagnitude,
+	getAgeHours,
+	getDepthBand,
+	getDepthRingOpacity,
 	getMagnitudeColor,
 	getMagnitudeCoreColor,
 	getMagnitudeRadius,
+	getRecencyOpacity,
 	passesMagnitudeFilter,
 } from '@/lib/magnitude'
+
+describe('depth', () => {
+	it('bands by the standard shallow/intermediate/deep cutoffs', () => {
+		expect(getDepthBand(10)).toBe('shallow')
+		expect(getDepthBand(69.9)).toBe('shallow')
+		expect(getDepthBand(70)).toBe('intermediate')
+		expect(getDepthBand(299)).toBe('intermediate')
+		expect(getDepthBand(300)).toBe('deep')
+	})
+
+	it('fades the ring as depth increases', () => {
+		expect(getDepthRingOpacity(5)).toBeGreaterThan(getDepthRingOpacity(150))
+		expect(getDepthRingOpacity(150)).toBeGreaterThan(getDepthRingOpacity(500))
+	})
+
+	it('shows one decimal only for very shallow events', () => {
+		expect(formatDepth(4.23)).toBe('4.2 km')
+		expect(formatDepth(120.6)).toBe('121 km')
+	})
+})
+
+describe('recency', () => {
+	const now = Date.parse('2026-08-15T12:00:00.000Z')
+
+	it('measures age in hours', () => {
+		expect(getAgeHours('2026-08-15T09:00:00.000Z', now)).toBeCloseTo(3)
+	})
+
+	it('never returns a negative age for events published slightly ahead', () => {
+		expect(getAgeHours('2026-08-15T12:00:30.000Z', now)).toBe(0)
+	})
+
+	it('keeps brand-new events at full opacity and fades old ones', () => {
+		expect(getRecencyOpacity(0)).toBe(1)
+		expect(getRecencyOpacity(1)).toBe(1)
+		expect(getRecencyOpacity(200)).toBe(0.45)
+		const day = getRecencyOpacity(24)
+		expect(day).toBeLessThan(1)
+		expect(day).toBeGreaterThan(0.45)
+	})
+})
 
 describe('magnitude', () => {
 	it('returns magnitude colors by threshold', () => {

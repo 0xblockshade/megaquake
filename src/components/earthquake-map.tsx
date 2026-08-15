@@ -11,7 +11,14 @@ import {
 	type ExpressionSpecification,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { getMagnitudeColor, getMagnitudeCoreColor, getMagnitudeRadius } from '@/lib/magnitude'
+import {
+	getAgeHours,
+	getDepthRingOpacity,
+	getMagnitudeColor,
+	getMagnitudeCoreColor,
+	getMagnitudeRadius,
+	getRecencyOpacity,
+} from '@/lib/magnitude'
 import type { QuakeEvent } from '@/lib/types'
 
 const SOURCE_ID = 'quakes'
@@ -23,7 +30,8 @@ const SPARK_LAYER_ID = 'quake-spark'
 const HIT_LAYERS = [CORE_LAYER_ID, RING_LAYER_ID, HALO_LAYER_ID]
 const WORKER_URL = '/maplibre/maplibre-gl-worker.mjs'
 
-const MAG_RADIUS: ExpressionSpecification = [
+/** Radius purely from magnitude, before zoom is taken into account. */
+const MAG_RADIUS_BASE: ExpressionSpecification = [
 	'interpolate',
 	['linear'],
 	['to-number', ['get', 'mag']],
@@ -39,6 +47,26 @@ const MAG_RADIUS: ExpressionSpecification = [
 	13,
 	8,
 	18,
+]
+
+/**
+ * Same dot, scaled by zoom. A fixed pixel radius makes the world view a smear of
+ * overlapping circles while a city view shows specks, so dots shrink when zoomed
+ * out and grow when zoomed in. Now that "All magnitudes" returns ~2,300 events
+ * over 7 days instead of 124, the zoomed-out crowding actually matters.
+ */
+const MAG_RADIUS: ExpressionSpecification = [
+	'interpolate',
+	['linear'],
+	['zoom'],
+	1,
+	['*', MAG_RADIUS_BASE, 0.55],
+	4,
+	['*', MAG_RADIUS_BASE, 0.85],
+	7,
+	MAG_RADIUS_BASE,
+	11,
+	['*', MAG_RADIUS_BASE, 1.7],
 ]
 
 if (typeof window !== 'undefined') {
@@ -100,6 +128,12 @@ function buildGeoJson(
 				radius: getMagnitudeRadius(event.mag),
 				isPulsing: pulsingIds.includes(event.id) ? 1 : 0,
 				isMajor: event.mag >= 7 ? 1 : 0,
+				// Depth and age were already in the data and never drawn. Shallow
+				// quakes get a solid ring, deep ones a faint one; recent events stay
+				// at full opacity while older ones recede.
+				depthKm: event.depthKm,
+				depthOpacity: getDepthRingOpacity(event.depthKm),
+				recency: getRecencyOpacity(getAgeHours(event.time)),
 			},
 		})),
 	}
@@ -200,12 +234,20 @@ function addQuakeLayers(map: MapLibreMap) {
 				7, 1.8,
 			],
 			'circle-stroke-color': ['get', 'color'],
+			// Magnitude sets the base ring strength, then depth and age modulate it:
+			// a shallow quake from ten minutes ago reads solid, a deep one from last
+			// week recedes. Both values were already in the data and unused.
 			'circle-stroke-opacity': [
-				'interpolate',
-				['linear'],
-				['to-number', ['get', 'mag']],
-				4, 0.45,
-				7, 0.9,
+				'*',
+				[
+					'interpolate',
+					['linear'],
+					['to-number', ['get', 'mag']],
+					4, 0.45,
+					7, 0.9,
+				],
+				['to-number', ['get', 'depthOpacity']],
+				['to-number', ['get', 'recency']],
 			],
 			'circle-pitch-alignment': 'map',
 		},

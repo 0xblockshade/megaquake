@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "public/maplibre/**",
+    // Vercel CLI build output — bundled vendor code, already gitignored.
+    ".vercel/**",
   ]),
 ]);
 
