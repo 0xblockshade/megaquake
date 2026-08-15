@@ -19,7 +19,7 @@ export function getMagnitudeRadius(mag: number): number {
 	if (mag >= 6) return 16
 	if (mag >= 5) return 12
 	if (mag >= 4) return 8
-	return 5
+	return 7
 }
 
 /**

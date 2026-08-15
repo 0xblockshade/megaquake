@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import featuredEvents from '@/config/featured-events.json'
 import { FeaturedHotspots } from '@/components/featured-hotspots'
+import { RecentPeru } from '@/components/recent-peru'
 import { LiveStatus } from '@/components/live-status'
 import { MagnitudeFilterControl } from '@/components/magnitude-filter'
 import { QuakeDetailPanel } from '@/components/quake-detail-panel'
@@ -156,6 +157,11 @@ export function QuakeDashboard({
 				</div>
 
 				<aside className="hidden min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain border-l border-[#262626] bg-[#0a0a0a] p-3 lg:flex">
+					<RecentPeru
+						events={events}
+						selectedId={selectedId}
+						onSelect={handleSelect}
+					/>
 					{showFeaturedList ? (
 						<FeaturedHotspots
 							events={events}
